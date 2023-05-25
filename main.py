@@ -22,7 +22,8 @@ from torchvision.models import vgg19, VGG19_Weights
 
 
 parser = argparse.ArgumentParser(description='Representation Dissimilarity')
-parser.add_argument('--data_dir', '-d', default='./data/SG/4/')
+parser.add_argument('--data_dir', default='./data')
+parser.add_argument('--type_name', '-t', default='a_scintillating')
 
 
 args = parser.parse_args()
@@ -83,23 +84,24 @@ class RepresentationalDissimilarity:
     path = os.path.join(root_dir, '{}.png'.format(title))
     fig.savefig(path)
 
-def generate_save_title(data_dir):
-  dirs = data_dir.split('/')
-  try:
-    mode = 'HG'
-    idx = dirs.index(mode)
-    save_title = '{}_{}'.format(mode, dirs[idx+1])
-  except ValueError as e:
-    mode = 'SG'
-    idx = dirs.index(mode)
-    save_title = '{}_{}'.format(mode, dirs[idx+1])
-  return save_title
+# def generate_save_title(data_dir):
+#   dirs = data_dir.split('/')
+#   try:
+#     mode = 'HG'
+#     idx = dirs.index(mode)
+#     save_title = '{}_{}'.format(mode, dirs[idx+1])
+#   except ValueError as e:
+#     mode = 'SG'
+#     idx = dirs.index(mode)
+#     save_title = '{}_{}'.format(mode, dirs[idx+1])
+#   return save_title
 
 
 
 if __name__ == '__main__':
   seed = 42
   data_dir = args.data_dir
+  type_name = args.type_name
 
   fix_seed(seed, determisnistic=True)
 
@@ -112,8 +114,8 @@ if __name__ == '__main__':
     T.PILToTensor(),
     VGG19_Weights.IMAGENET1K_V1.transforms()
   ])
-  dataset = ImageFolder(root=data_dir, transform=transform)
-  dataloader = torch.utils.data.DataLoader(dataset, batch_size=21, shuffle=False, num_workers=1, pin_memory=True)
+  dataset = ImageFolder(root=os.path.join(data_dir, type_name), transform=transform)
+  dataloader = DataLoader(dataset, batch_size=21, shuffle=False, num_workers=1, pin_memory=True)
   
   r = RepresentationalDissimilarity()
 
@@ -125,6 +127,4 @@ if __name__ == '__main__':
 
       fc_8 = model(x)
       r.register_r_L1(fc_8, dataset.classes[i])
-
-  save_title = generate_save_title(data_dir)
-  r.plot_R('./result/', save_title)
+  r.plot_R('./result/', type_name)
